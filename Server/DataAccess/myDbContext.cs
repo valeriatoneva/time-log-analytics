@@ -1,15 +1,18 @@
-namespace Server.DataAccess
-{
-    using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Server.DataModels;
 
-public class MyDbContext : DbContext
+namespace Server.DataAccess
 {
-    public DbSet<User> Users { get; set; }
-    public DbSet<Project> Projects { get; set; }
-    public DbSet<TimeLog> TimeLogs { get; set; }
+    public class MyDbContext : DbContext
+    {
 
-    protected override void OnConfiguring(DbContextOptionsBuilder options)
-        => options.UseSqlite("Data Source=mydatabase.db");
-}
+        public MyDbContext(DbContextOptions<MyDbContext> options) : base(options)
+        {
+        }
+
+        public DbSet<User> Users { get; set; }
+        public DbSet<Project> Projects { get; set; }
+        public DbSet<TimeLog> TimeLogs { get; set; }
+
+    }
 }

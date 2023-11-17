@@ -1,13 +1,13 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { TimeLogTableComponent } from './time-log-table/time-log-table.component';
+import { UserChartComponent } from './user-chart/user-chart.component';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
-  imports: [CommonModule, RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  styleUrls: ['./app.component.scss'],
+  standalone: true,
+  imports: [TimeLogTableComponent, UserChartComponent]
 })
 export class AppComponent {
   title = 'frontend';

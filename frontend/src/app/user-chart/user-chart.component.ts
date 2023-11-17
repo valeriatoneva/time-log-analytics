@@ -1,13 +1,12 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { SharedModule } from '../shared/shared.module';
 
 @Component({
   selector: 'app-user-chart',
-  standalone: true,
-  imports: [CommonModule],
   templateUrl: './user-chart.component.html',
-  styleUrl: './user-chart.component.scss'
+  styleUrls: ['./user-chart.component.scss'],
+  standalone: true,
+  imports: [SharedModule] 
 })
 export class UserChartComponent {
-
 }

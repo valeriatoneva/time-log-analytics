@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Server.Models;
+using Server.DataAccess;
+using Server.DataModels;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,32 +19,98 @@ namespace Server.Controllers
             _context = context;
         }
 
+        // GET: api/timelogs
         [HttpGet]
-public async Task<IActionResult> GetTimeLogs([FromQuery] int pageIndex, [FromQuery] int pageSize)
-{
-    // Calculate the number of records to skip (offset)
-    int skip = (pageIndex - 1) * pageSize;
-    
-    // Query the database for the total count of time logs
-    int totalRecords = await _context.TimeLogs.CountAsync();
-    
-    // Retrieve the specified page of time logs, ordering by date
-    var timeLogs = await _context.TimeLogs
-                                .OrderBy(tl => tl.Date) // Sorting by Date
-                                .Skip(skip)  // Skip the records before the current page
-                                .Take(pageSize) // Take the records for the current page
-                                .Select(tl => new 
-                                {
-                                    TimeLogId = tl.TimeLogId,
-                                    UserId = tl.UserId,
-                                    ProjectId = tl.ProjectId,
-                                    Date = tl.Date,
-                                    HoursWorked = tl.HoursWorked
-                                })
-                                .ToListAsync();
-    
-    // Return the paged data and total record count to the client
-    return Ok(new { TotalRecords = totalRecords, Data = timeLogs });
-}
-}
+        public async Task<IActionResult> GetTimeLogs([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+        {
+            int skip = (pageIndex - 1) * pageSize;
+            int totalRecords = await _context.TimeLogs.CountAsync();
+
+            var timeLogs = await _context.TimeLogs
+                                        .OrderBy(tl => tl.Date) 
+                                        .Skip(skip)  
+                                        .Take(pageSize) 
+                                        .Select(tl => new 
+                                        {
+                                            TimeLogId = tl.TimeLogId,
+                                            UserId = tl.UserId,
+                                            ProjectId = tl.ProjectId,
+                                            Date = tl.Date,
+                                            HoursWorked = tl.HoursWorked
+                                        })
+                                        .ToListAsync();
+
+            return Ok(new { TotalRecords = totalRecords, Data = timeLogs });
+        }
+
+        // POST
+        [HttpPost]
+        public async Task<IActionResult> PostTimeLog([FromBody] TimeLog timeLog)
+        {
+            _context.TimeLogs.Add(timeLog);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetTimeLog), new { id = timeLog.TimeLogId }, timeLog);
+        }
+
+        // GET
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetTimeLog(int id)
+        {
+            var timeLog = await _context.TimeLogs.FindAsync(id);
+
+            if (timeLog == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(timeLog);
+        }
+
+        // PUT
+        [HttpPut("{id}")]
+        public async Task<IActionResult> PutTimeLog(int id, [FromBody] TimeLog updatedTimeLog)
+        {
+            if (id != updatedTimeLog.TimeLogId)
+            {
+                return BadRequest();
+            }
+
+            _context.Entry(updatedTimeLog).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!_context.TimeLogs.Any(e => e.TimeLogId == id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+
+        // DELETE
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTimeLog(int id)
+        {
+            var timeLog = await _context.TimeLogs.FindAsync(id);
+            if (timeLog == null)
+            {
+                return NotFound();
+            }
+
+            _context.TimeLogs.Remove(timeLog);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+    }
 }

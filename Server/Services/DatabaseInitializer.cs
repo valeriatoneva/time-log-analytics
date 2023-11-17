@@ -1,34 +1,36 @@
-using Server.DataModels; 
+using Server.DataModels;
 using Server.DataAccess;
+using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 
 public class DatabaseInitializer
 {
-    public void Initialize()
+    public static void Initialize(DbContextOptions<MyDbContext> options)
     {
-        var context = new MyDbContext();
-
-        // this SHOULD clear and then create the db if we are lucky
-        context.Database.EnsureDeleted();
-        context.Database.EnsureCreated();
-
-        var projectList = new[] {
-            new Project { Name = "My own" },
-            new Project { Name = "Free Time" },
-            new Project { Name = "Work" }
-        };
-        foreach (var project in projectList)
+        using (var context = new MyDbContext(options))
         {
-            context.Projects.Add(project);
-        }
-        context.SaveChanges(); 
+            // this SHOULD clear and then create the db if we are lucky
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
 
-        AddUsers(context);
-        AddTimeLogs(context, projectList);
+            var projectList = new[] {
+                new Project { Name = "My own" },
+                new Project { Name = "Free Time" },
+                new Project { Name = "Work" }
+            };
+            foreach (var project in projectList)
+            {
+                context.Projects.Add(project);
+            }
+            context.SaveChanges();
+
+            AddUsers(context);
+            AddTimeLogs(context, projectList);
+        }
     }
 
-
-    private void AddUsers(MyDbContext context)
+    private static void AddUsers(MyDbContext context)
     {
         var rng = new Random();
         var firstNames = new[] { "John", "Gringo", "Mark", "Lisa", "Maria", "Sonya", "Philip", "Jose", "Lorenzo", "George", "Justin" };
@@ -40,7 +42,6 @@ public class DatabaseInitializer
             var firstName = firstNames[rng.Next(firstNames.Length)];
             var lastName = lastNames[rng.Next(lastNames.Length)];
             var domain = domains[rng.Next(domains.Length)];
-            // making a name out of the email and the domain
             var email = $"{firstName}.{lastName}@{domain}".ToLower();
 
             var user = new User
@@ -55,19 +56,19 @@ public class DatabaseInitializer
         context.SaveChanges();
     }
 
-      private void AddTimeLogs(MyDbContext context, Project[] projectList)
+    private static void AddTimeLogs(MyDbContext context, Project[] projectList)
     {
-        var rng = new Random(); 
-        var allUsers = context.Users.ToList(); // getting all users 
+        var rng = new Random();
+        var allUsers = context.Users.ToList(); // getting all users
 
         foreach (var user in allUsers)
         {
-            var logCount = rng.Next(1, 21); 
+            var logCount = rng.Next(1, 21);
 
-            for (int i = 0; i < logCount; i++) 
+            for (int i = 0; i < logCount; i++)
             {
                 var randomDate = DateTime.Now.AddDays(-rng.Next(30)); // a date in the last 30 days
-                var hours = (float)(rng.NextDouble() * (8.00 - 0.25) + 0.25); 
+                var hours = (float)(rng.NextDouble() * (8.00 - 0.25) + 0.25);
 
                 var log = new TimeLog
                 {
@@ -77,9 +78,9 @@ public class DatabaseInitializer
                     HoursWorked = hours
                 };
 
-                context.TimeLogs.Add(log); 
+                context.TimeLogs.Add(log);
+            }
         }
         context.SaveChanges();
     }
-}
 }
